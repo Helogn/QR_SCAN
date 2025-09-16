@@ -132,6 +132,23 @@ class QRDisplay:
             # 等待一段时间再发下一个，让接收方有足够时间扫描
             time.sleep(INTERVAL)
 
+    @staticmethod
+    def get_all_files(directory):
+        # 获取该目录下所有文件包括嵌套在文件夹内的
+        all_files = []
+        for root, dirs, files in os.walk(directory):
+            for file in files:
+                all_files.append(os.path.relpath(os.path.join(root, file), directory))
+        return all_files
+
+
+    @staticmethod
+    def ensure_directory_exists(file_path):
+        # 根据目标目录创建文件夹，如果中间级不存在则创建    
+        directory = os.path.dirname(file_path)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
     def start(self):
         """
         主启动方法：
@@ -144,6 +161,8 @@ class QRDisplay:
         if not os.path.exists(self.folder_path):
             print(f"错误：目录不存在: {self.folder_path}")
             return
+
+        res = self.get_all_files(self.folder_path)
 
         # 获取该目录下所有文件，并筛选出以 .py 结尾的 Python 源文件
         py_files = [
@@ -182,6 +201,8 @@ if __name__ == "__main__":
     示例：python sender.py ./my_python_code/
     """
     # 检查是否提供了命令行参数（即文件夹路径）
+
+    sys.argv.append("./source_code/")  # 测试时可默认指定路径，正式使用时请删除此行
     if len(sys.argv) < 2:
         print("用法: python sender.py <source_folder_path>")
         sys.exit(1)  # 参数不足则报错退出
