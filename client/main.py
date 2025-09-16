@@ -17,13 +17,13 @@ import time
 
 # ------------------ 配置区域 ------------------
 MONITOR_REGION = {
-    'top': 100,
+    'top': 50,
     'left': 50,
     'width': 400,
     'height': 400,
 }
 
-SCAN_INTERVAL = 0.5
+SCAN_INTERVAL = 0.1
 WINDOW_NAME = "🔍 二维码扫描监控"
 SAVE_TIMEOUT = 5  # 若在5秒内未接收到新二维码，则自动保存
 # ----------------------------------------------
@@ -32,6 +32,12 @@ received_data = set()
 current_file_path = None
 last_save_time = time.time()
 received_files = {}
+
+def ensure_directory_exists(file_path):
+    # 根据目标目录创建文件夹，如果中间级不存在则创建
+    directory = os.path.dirname(file_path)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
 def parse_qr_data(data):
     try:
@@ -53,7 +59,8 @@ def save_current_file(dst_folder):
     if current_file_path and current_file_path in received_files:
         output_dir = dst_folder
         os.makedirs(output_dir, exist_ok=True)
-        filepath = os.path.join(output_dir, os.path.basename(current_file_path))
+        filepath = os.path.join(output_dir, str(current_file_path))
+        ensure_directory_exists(filepath)
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(''.join(received_files[current_file_path]))
         print(f"✅ 已保存: {filepath}")
@@ -89,10 +96,10 @@ def main(dst_folder):
                 received_data.add(data)
 
                 dtype, *info = parse_qr_data(data)
-
                 if dtype == 'PATH':
                     # 如果检测到新的 PATH 信息，则保存之前的文件并开始记录新文件
                     save_current_file(dst_folder)
+                    print("current_file_path", current_file_path)
                     current_file_path = info[0]
                     received_files[current_file_path] = []
                     print(f"📂 新建文件: {current_file_path}")
@@ -112,8 +119,9 @@ def main(dst_folder):
 
             # 如果一段时间内没有新的二维码，则保存当前文件
             if time.time() - last_save_time > SAVE_TIMEOUT:
-                save_current_file()
+                save_current_file(dst_folder)
                 last_save_time = time.time()
+                break
 
             # ✅ 显示当前扫描画面
             cv2.imshow(WINDOW_NAME, frame)
@@ -124,7 +132,7 @@ def main(dst_folder):
                 break
 
     cv2.destroyAllWindows()
-    save_current_file()  # 确保在程序结束前保存所有数据
+    save_current_file(dst_folder)  # 确保在程序结束前保存所有数据
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

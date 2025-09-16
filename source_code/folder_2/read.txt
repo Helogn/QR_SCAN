@@ -1,0 +1,27 @@
+（1）添加：将容器添加到某个网络。主要过程为在Container Runtime
+创建容器时，先创建好容器内的网络命名空间（Network Namespace），然
+后调用CNI插件为该netns进行网络配置，最后启动容器内的进程。
+添加接口的参数如下。
+◎ Version：CNI版本号。
+◎ Container ID：容器ID。
+◎ Network namespace path：容器的网络命名空间路径，例如/proc/
+[pid]/ns/net。
+◎ Network configuration：网络配置JSON文档，用于描述容器待加入
+的网络。
+◎ Extra arguments：其他参数，提供基于容器的CNI插件简单配置机
+制。
+◎ Name of the interface inside the container：容器内的网卡名。
+返回的信息如下。
+◎ Interfaces
+list：网卡列表，根据Plugin的实现，可能包括Sandbox
+Interface名称、主机Interface名称、每个Interface的地址等信息。
+◎ IPs assigned to the interface：IPv4或者IPv6地址、网关地址、路由
+信息等。
+◎ DNS information：DNS相关的信息。
+（2）删除：容器销毁时将容器从某个网络中删除。
+删除接口的参数如下。
+◎ Version：CNI版本号。
+◎ Container ID：容器ID。
+◎ Network namespace path：容器的网络命名空间路径，例如/proc/
+[pid]/ns/net。
+◎ Network configuration：网络配置JSON文档，用于描述容器待加入
