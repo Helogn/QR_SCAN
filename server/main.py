@@ -120,5 +120,77 @@ class QRDisplay:
 
             # 构造要编码的数据字符串：
             # 格式：FILE:<文件名>|LINE:<起始行号>\n<实际代码>
-            data = f
-            
+            data = f"FILE:{filename}|LINE:{i}\n" + ''.join(chunk)
+
+            # 打印日志，提示正在发送哪一部分
+            print(f"发送二维码: {filename} 第 {i} 行")
+
+            # 生成二维码并显示
+            qr_img = self.generate_qr_image(data)
+            self.display_qr(qr_img)
+
+            # 等待一段时间再发下一个，让接收方有足够时间扫描
+            time.sleep(INTERVAL)
+
+    def start(self):
+        """
+        主启动方法：
+        1. 检查目标文件夹是否存在
+        2. 查找所有 .py 结尾的文件
+        3. 逐一调用 send_file 发送每个文件
+        4. 全部完成后关闭窗口
+        """
+        # 检查文件夹是否存在
+        if not os.path.exists(self.folder_path):
+            print(f"错误：目录不存在: {self.folder_path}")
+            return
+
+        # 获取该目录下所有文件，并筛选出以 .py 结尾的 Python 源文件
+        py_files = [
+            f for f in os.listdir(self.folder_path)
+            if os.path.isfile(os.path.join(self.folder_path, f)) and f.endswith('.py')
+        ]
+
+        # 输出找到的文件数量及名称（用于调试）
+        print(f"找到 {len(py_files)} 个 .py 文件: {py_files}")
+
+        # 如果没有找到任何 .py 文件，给出警告并退出
+        if not py_files:
+            print("警告：未找到任何 .py 文件")
+            return
+
+        # 遍历每一个 .py 文件，执行发送流程
+        for filename in py_files:
+            filepath = os.path.join(self.folder_path, filename)  # 构造完整路径
+            self.send_file(filepath, filename)  # 调用发送函数
+
+        # 所有文件发送完毕后，输出完成信息
+        print("所有文件发送完毕，关闭窗口...")
+
+        # 安全退出 GUI 主循环
+        self.root.quit()
+
+        # 销毁窗口对象，释放资源
+        self.root.destroy()
+
+
+# ==================== 程序入口 ====================
+if __name__ == "__main__":
+    """
+    程序主入口
+    使用方式：python sender.py <source_folder_path>
+    示例：python sender.py ./my_python_code/
+    """
+    # 检查是否提供了命令行参数（即文件夹路径）
+    if len(sys.argv) < 2:
+        print("用法: python sender.py <source_folder_path>")
+        sys.exit(1)  # 参数不足则报错退出
+
+    # 获取第一个命令行参数作为源代码文件夹路径
+    folder_path = sys.argv[1]
+
+    # 创建 QRDisplay 实例，传入文件夹路径
+    app = QRDisplay(folder_path=folder_path)
+
+    # 启动发送流程
+    app.start()
