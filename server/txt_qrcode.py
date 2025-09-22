@@ -25,25 +25,50 @@ class QRDisplay:
 
     def generate_and_print_qr(self, data):
         """
-        生成文本二维码并打印到终端，显示前先清屏
+        生成彩色文本二维码并打印到终端，支持自定义模块颜色
         :param data: 字符串数据
         """
         # ===== 清屏 =====
-        os.system('clear' if os.name != 'nt' else 'cls')  # Unix: clear, Windows: cls
+        os.system('clear' if os.name != 'nt' else 'cls')
 
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_M,
-            box_size=1,
+            box_size=1,  # 必须为1才能逐模块控制
             border=2,
         )
         qr.add_data(data)
         qr.make(fit=True)
 
+        # 获取二维码矩阵：True 表示深色模块（黑），False 表示浅色模块（白）
+        matrix = qr.get_matrix()
+
+        # ANSI 颜色定义（可自定义）
+        BLACK = '\033[48;2;0;0;0m  \033[0m'  # 背景黑
+        WHITE = '\033[48;2;255;255;255m  \033[0m'  # 背景白
+        # 或使用简写：
+        # BLACK = '\033[40m  \033[0m'
+        # WHITE = '\033[47m  \033[0m'
+
+        # ✅ 自定义你喜欢的颜色（RGB）
+        DARK_GREEN = '\033[48;2;0;100;0m  \033[0m'  # 深绿模块
+        LIGHT_YELLOW = '\033[48;2;255;255;200m  \033[0m'  # 浅黄背景
+
+        # 选择你想要的样式：
+        module_dark = DARK_GREEN  # 二维码“黑块”颜色
+        module_light = WHITE  # 二维码“白块”颜色
+
         print("\n" + "=" * 50)
         print("🔍 请扫描二维码（终端已清屏）...")
         print("=" * 50)
-        qr.print_ascii(invert=False)
+
+        # 打印带颜色的二维码
+        for row in matrix:
+            line = ""
+            for cell in row:
+                line += module_dark if cell else module_light
+            print("  " + line)  # 左侧加空格模拟边框位置感
+
         print("\n" + "-" * 50)
         print(f"📌 数据预览: {repr(data[:60] + '...' if len(data) > 60 else data)}")
         print("-" * 50)
