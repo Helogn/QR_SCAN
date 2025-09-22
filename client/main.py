@@ -17,10 +17,10 @@ import time
 
 # ------------------ 配置区域 ------------------
 MONITOR_REGION = {
-    'top': 50,
+    'top': 100,
     'left': 50,
-    'width': 400,
-    'height': 400,
+    'width': 800,
+    'height': 800,
 }
 
 SCAN_INTERVAL = 0.1
